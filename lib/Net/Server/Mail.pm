@@ -9,7 +9,7 @@ use Carp;
 
 use constant HOSTNAME => hostname();
 
-$Net::Server::Mail::VERSION = '0.04';
+$Net::Server::Mail::VERSION = '0.05';
 
 =pod
 
@@ -503,7 +503,7 @@ sub process_operation
 {
     my($self, $operation) = @_;
     my($verb, $params) = $self->tokenize_command($operation);
-    if($params =~ /[\r\n]/)
+    if(defined $params && $params =~ /[\r\n]/)
     {
         # doesn't support grouping of operations
         $self->reply(453, "Command received prior to completion of".
