@@ -58,7 +58,7 @@ Net::Server::Mail::SMTP - A module to implement the SMTP protocole
         return(0, 554, 'Error: no valid recipients')
             unless(@recipients);
 
-        my $msgid = add_queue($sender, \@recipients, $data);
+        my $msgid = add_queue($sender, \@recipients, $data)
           or return(0);
 
         return(1, 250, "message queued $msgid");
@@ -599,6 +599,13 @@ sub data_finished
     (
         name => 'DATA',
         arguments => [\$self->{_data}],
+        on_success => sub
+        {
+            # reinitiate the connection
+            $self->step_reverse_path(1);
+            $self->step_forward_path(0);
+            $self->step_maildata_path(0);
+        },
         success_reply => [250, 'message sent'],
     );
 

@@ -21,7 +21,7 @@ Net::Server::Mail::ESMTP - A module to implement the ESMTP protocole
     my $conn;
     while($conn = $server->accept)
     {
-        my $esmtp = new Net::Server::Mail::SMTP socket => $conn;
+        my $esmtp = new Net::Server::Mail::ESMTP socket => $conn;
         # activate some extensions
         $esmtp->register('Net::Server::Mail::ESMTP::8BITMIME');
         $esmtp->register('Net::Server::Mail::ESMTP::PIPELINING');
@@ -63,7 +63,7 @@ Net::Server::Mail::ESMTP - A module to implement the ESMTP protocole
         return(0, 554, 'Error: no valid recipients')
             unless(@recipients);
 
-        my $msgid = add_queue($sender, \@recipients, $data);
+        my $msgid = add_queue($sender, \@recipients, $data)
           or return(0);
 
         return(1, 250, "message queued $msgid");

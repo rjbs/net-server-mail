@@ -13,7 +13,7 @@ Net::Server::Mail::LMTP - A module to implement the LMTP protocole
 
 =head1 SYNOPSIS
 
-    use Net::Server::Mail::ESMTP;
+    use Net::Server::Mail::LMTP;
 
     my @local_domains = qw(example.com example.org);
     my $server = new IO::Socket::INET Listen => 1, LocalPort => 25;
@@ -21,10 +21,7 @@ Net::Server::Mail::LMTP - A module to implement the LMTP protocole
     my $conn;
     while($conn = $server->accept)
     {
-        my $esmtp = new Net::Server::Mail::SMTP socket => $conn;
-        # activate some extensions
-        $esmtp->register('Net::Server::Mail::ESMTP::8BITMIME');
-        $esmtp->register('Net::Server::Mail::ESMTP::PIPELINING');
+        my $esmtp = new Net::Server::Mail::LMTP socket => $conn;
         # adding some handlers
         $esmtp->set_callback(RCPT => \&validate_recipient);
         $esmtp->set_callback(DATA => \&queue_message);
@@ -63,7 +60,7 @@ Net::Server::Mail::LMTP - A module to implement the LMTP protocole
         return(0, 554, 'Error: no valid recipients')
             unless(@recipients);
 
-        my $msgid = add_queue($sender, \@recipients, $data);
+        my $msgid = add_queue($sender, \@recipients, $data)
           or return(0);
 
         return(1, 250, "message queued $msgid");
@@ -89,7 +86,15 @@ sub init
 
     $self->def_verb(LHLO => 'lhlo');
 
+    # Required by RFC
+    $self->register('Net::Server::Mail::ESMTP::PIPELINING');
+
     return $self;
+}
+
+sub get_protoname
+{
+    return 'LMTP';
 }
 
 =pod
@@ -143,9 +148,19 @@ sub lhlo
     return;
 }
 
+=pod
+
+=head2 DATA
+
+Overide the default DATA event by a per recipient response. It will
+be called for each recipients with data (in a scalar reference) as 
+first argument followed by the current recipient.
+
+=cut
+
 sub data_finished
 {
-    my($self, $data) = @_;
+    my($self) = @_;
     
     my $recipients = $self->step_forward_path();
 
@@ -154,7 +169,14 @@ sub data_finished
         $self->make_event
         (
             name => 'DATA',
-            arguments => [$data, $forward_path],
+            arguments => [\$self->{_data}, $forward_path],
+            on_success => sub
+            {
+                # reinitiate the connection
+                $self->step_reverse_path(1);
+                $self->step_forward_path(0);
+                $self->step_maildata_path(0);
+            }, 
             success_reply => [250, 'Ok'],
             failure_reply => [550, "$forward_path Failed"],
         );
