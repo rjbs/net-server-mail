@@ -9,7 +9,7 @@ use Carp;
 
 use constant HOSTNAME => hostname();
 
-$Net::Server::Mail::VERSION = '0.03';
+$Net::Server::Mail::VERSION = '0.04';
 
 =pod
 
@@ -161,7 +161,7 @@ sub init
 
     if(defined $options->{handle_in} && defined $options->{handle_out})
     {
-        if(ref $options->{handle_in} eq 'IO::Handle')
+        if(UNIVERSAL::isa($options->{handle_in},'IO::Handle'))
         {
             $self->{in} = $options->{handle_in};
         }
@@ -170,7 +170,7 @@ sub init
             $self->{in} = 
               IO::Handle->new->fdopen(fileno($options->{handle_in}), "r");
         }
-        if(ref $options->{handle_out} eq 'IO::Handle')
+        if(UNIVERSAL::isa($options->{handle_out},'IO::Handle'))
         {
             $self->{out} = $options->{handle_out};
         }
@@ -466,6 +466,10 @@ sub process
     while($sel->can_read($self->{options}->{idle_timeout} || undef))
     {
         $_ = join '', <$in>;
+        
+        # do not go into an infinit loop if client close the connection
+        last unless $_;
+
         if(defined $self->next_input_to())
         {
             $self->tell_next_input_method($_);
@@ -499,6 +503,13 @@ sub process_operation
 {
     my($self, $operation) = @_;
     my($verb, $params) = $self->tokenize_command($operation);
+    if($params =~ /[\r\n]/)
+    {
+        # doesn't support grouping of operations
+        $self->reply(453, "Command received prior to completion of".
+                     " previous command sequence");
+        return;
+    }
     $self->process_command($verb, $params);
 }
 
