@@ -570,9 +570,10 @@ sub data_part
 {
     my($self, $data) = @_;
 
-    if($data =~ /\A(?:(.*))?^\.\r?\n(?:^(.*))?\z/ms)
+    # search for end of data indicator
+    if($data =~ /^\.\r?\n/m)
     {
-        if(defined $2 and length $2)
+        if(length $')
         {
             # Client sent a command after the end of data indicator ".".
             # Putting this error in a method to permit overriding
@@ -580,18 +581,21 @@ sub data_part
             $self->data_badsequence_error();
             return;
         }
-        $self->{_data} .= $1;
+        
+        # RFC 821 compliance.
+        ($data = $`) =~ s/^\.//mg;
+        $self->{_data} .= $data;
         return $self->data_finished();
     }
 
+    # RFC 821 compliance.
+    $data =~ s/^\.//mg;
     $self->make_event
       (
        name => 'DATA-PART',
        arguments => [\$data],
        on_success => sub
        {
-           # RFC 821 compliance.
-           $data =~ s/^\.//mg;
            $self->{_data} .= $data;
            # please, recall me soon !
            $self->next_input_to(\&data_part);
@@ -648,7 +652,8 @@ sub rset
         name => 'RSET',
         on_success => sub
         {
-            $self->step_reverse_path(0);
+            $self->step_reverse_path(1)
+              if($self->step_reverse_path());
             $self->step_forward_path(0);
             $self->step_maildata_path(0);
         },
