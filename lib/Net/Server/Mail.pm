@@ -9,7 +9,7 @@ use Carp;
 
 use constant HOSTNAME => hostname();
 
-$Net::Server::Mail::VERSION = '0.08';
+$Net::Server::Mail::VERSION = '0.09';
 
 =pod
 
@@ -30,7 +30,8 @@ Net::Server::Mail - Class to easily create a mail server
         my $smtp = new Net::Server::Mail::SMTP socket => $conn;
         $smtp->set_callback(RCPT => \&validate_recipient);
         $smtp->set_callback(DATA => \&queue_message);
-        $smtp->process;
+        $smtp->process();
+	$conn->close();
     }
 
     sub validate_recipient
@@ -491,19 +492,21 @@ sub process
         }
         
         # do not go into an infinit loop if client close the connection
-        last unless $_;
+        last unless defined $_;
 
+        my $rv;
         if(defined $self->next_input_to())
         {
-            $self->tell_next_input_method($_);
+            $rv = $self->tell_next_input_method($_);
         }
         else
         {
             next unless defined;
-            my $rv = $self->{process_operation}($self, $_);
-            # if $rv is defined, we have to close the connection
-            return $rv if defined $rv;
+            $rv = $self->{process_operation}($self, $_);
         }
+        # if $rv is defined, we have to close the connection
+        return $rv if defined $rv;
+
     }
 
     $self->timeout;
