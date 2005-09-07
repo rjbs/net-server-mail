@@ -9,7 +9,7 @@ use Carp;
 
 use constant HOSTNAME => hostname();
 
-$Net::Server::Mail::VERSION = '0.12';
+$Net::Server::Mail::VERSION = '0.13';
 
 =pod
 
@@ -203,7 +203,8 @@ sub init
 =head2 dojob
 
 Some command need to do some job after the handler call. Handler may
-want to overide this comportement an avoid this job to be executed.
+want to overide this comportement to prevent from this job being
+executed.
 
 By calling this method with a (defined) false value as argument,
 expected job isn't executed. Defaults to true.

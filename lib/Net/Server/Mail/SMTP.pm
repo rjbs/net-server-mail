@@ -87,7 +87,7 @@ sub init
     return $rv unless $rv eq $self;
 
     $self->def_verb(HELO => 'helo');
-    $self->def_verb(VEFY => 'vrfy');
+    $self->def_verb(VRFY => 'vrfy');
     $self->def_verb(EXPN => 'expn');
     $self->def_verb(TURN => 'turn');
     $self->def_verb(HELP => 'help');
@@ -411,7 +411,7 @@ sub mail
 
 Handler takes address as argument. On success, engage the mail data path step and
 push the given address into the recipient list for later use (get it
-with get_recipient() method).
+with get_recipients() method).
 
 =cut
 
