@@ -4,6 +4,8 @@ use 5.006;
 use strict;
 use base 'Net::Server::Mail';
 
+our $VERSION = "0.14";
+
 =pod
 
 =head1 NAME
@@ -41,7 +43,7 @@ Net::Server::Mail::SMTP - A module to implement the SMTP protocole
         {
             return(0, 513, 'Syntax error.');
         }
-        elsif(grep $domain eq $_, @local_domains)
+        elsif(not(grep $domain eq $_, @local_domains))
         {
             return(0, 554, "$recipient: Recipient address rejected: Relay access denied");
         }
@@ -560,6 +562,7 @@ sub data
         return;
     }
 
+    $self->{last_chunk} = '';
     $self->make_event
       (
        name => 'DATA-INIT',
@@ -570,12 +573,15 @@ sub data
     return;
 }
 
+# Because data is cutted into pieces (4096 bytes), we have to search
+# "\r\n.\r\n" sequence in 2 consecutive pieces. $self->{last_chunk}
+# contains the last 5 bytes.
 sub data_part
 {
     my($self, $data) = @_;
 
     # search for end of data indicator
-    if($data =~ /^\.\r?\n/m)
+    if("$self->{last_chunk}$data" =~ /\r?\n\.\r?\n/s )
     {
         my $more_data = $';
         if(length $more_data)
@@ -590,13 +596,14 @@ sub data_part
         }
         
         # RFC 821 compliance.
-        ($data = $`) =~ s/^\.//mg;
+        ($data = "$self->{last_chunk}$data") =~ s/(\r?\n)\.\r?\n/$1/s;
         $self->{_data} .= $data;
         return $self->data_finished($more_data);
     }
 
-    # RFC 821 compliance.
-    $data =~ s/^\.//mg;
+    my $tmp = $self->{last_chunk};
+    $self->{last_chunk} = substr $data, -5;
+    $data = $tmp . substr $data, 0, -5;
     $self->make_event
       (
        name => 'DATA-PART',

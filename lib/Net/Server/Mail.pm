@@ -9,7 +9,7 @@ use Carp;
 
 use constant HOSTNAME => hostname();
 
-$Net::Server::Mail::VERSION = '0.13';
+$Net::Server::Mail::VERSION = '0.14';
 
 =pod
 
@@ -48,7 +48,7 @@ Net::Server::Mail - Class to easily create a mail server
         {
             return(0, 513, 'Syntax error.');
         }
-        elsif(grep $domain eq $_, @local_domains)
+        elsif(not(grep $domain eq $_, @local_domains))
         {
             return(0, 554, "$recipient: Recipient address rejected: Relay access denied");
         }

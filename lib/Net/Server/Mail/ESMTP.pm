@@ -5,6 +5,8 @@ use strict;
 use Carp;
 use base qw(Net::Server::Mail::SMTP);
 
+our $VERSION = "0.14";
+
 =pod
 
 =head1 NAME
@@ -46,7 +48,7 @@ Net::Server::Mail::ESMTP - A module to implement the ESMTP protocole
         {
             return(0, 513, 'Syntax error.');
         }
-        elsif(grep $domain eq $_, @local_domains)
+        elsif(not(grep $domain eq $_, @local_domains))
         {
             return(0, 554, "$recipient: Recipient address rejected: Relay access denied");
         }
@@ -268,6 +270,7 @@ sub handle_options
         my $handler = $self->{xoption}->{$verb}->{$key};
         if(defined $handler)
         {
+            no strict "refs";
             &$handler($self, $verb, $address, $key, $value);
         }
         else
