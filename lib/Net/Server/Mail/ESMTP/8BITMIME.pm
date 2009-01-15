@@ -4,7 +4,7 @@ use 5.006;
 use strict;
 use base qw(Net::Server::Mail::ESMTP::Extension);
 
-our $VERSION = "0.14";
+our $VERSION = '0.180';
 
 sub keyword
 {

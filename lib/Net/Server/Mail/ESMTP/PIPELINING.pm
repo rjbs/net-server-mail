@@ -5,7 +5,7 @@ use strict;
 use base 'Net::Server::Mail::ESMTP::Extension';
 use constant GROUP_COMMANDS => [qw(RSET MAIL SEND SOML SAML RCPT)];
 
-our $VERSION = 0.13;
+our $VERSION = '0.180';
 
 sub init
 {
