@@ -55,15 +55,13 @@ Net::Server::Mail::LMTP - A module to implement the LMTP protocole
 
     sub queue_message
     {
-        my($session, $data) = @_;
+        my($session, $data, $rcpt) = @_;
 
         my $sender = $session->get_sender();
-        my @recipients = $session->get_recipients();
 
-        return(0, 554, 'Error: no valid recipients')
-            unless(@recipients);
+        return(0, 554, 'Error: no valid recipients') unless $rcpt;
 
-        my $msgid = add_queue($sender, \@recipients, $data)
+        my $msgid = add_queue($sender, [ $rcpt ], $data)
           or return(0);
 
         return(1, 250, "message queued $msgid");
