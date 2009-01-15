@@ -1,4 +1,9 @@
-Revision history for Perl extension Net::Server::Mail.
+Revision history for Perl extension Net::Server::Mail
+
+0.180     2009-01-15
+          callback added for ESMTP XFORWARD
+          all packages brought in line with one version
+          repository now stored in github
 
 0.17  Mon Mar 17 15:36:10 2008
 	- duplicated leading dot (RFC 2821 not correctly implemented). Closes: #34099
