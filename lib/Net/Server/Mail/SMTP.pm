@@ -10,7 +10,7 @@ our $VERSION = '0.180';
 
 =head1 NAME
 
-Net::Server::Mail::SMTP - A module to implement the SMTP protocole
+Net::Server::Mail::SMTP - A module to implement the SMTP protocol
 
 =head1 SYNOPSIS
 
